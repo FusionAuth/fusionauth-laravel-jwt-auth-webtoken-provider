@@ -1,6 +1,6 @@
 {
-    "name": "fusionauth/jwt-auth-webtoken-provider",
-    "description": "This package uses web-token/jwt as a provider for tymon/jwtauth",
+    "name": "fusionauth/fusionauth-jwt-auth-webtoken-provider",
+    "description": "This package uses web-token/jwt-core as a provider for tymon/jwtauth",
     "keywords": [
         "auth",
         "authentication",
