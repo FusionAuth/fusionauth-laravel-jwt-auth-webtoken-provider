@@ -28,7 +28,7 @@ class AlgorithmManagerFactory
     public function make(string $algo): AlgorithmManager
     {
         return new AlgorithmManager([
-            $this->buildAlgorithm($algo)
+            $this->buildAlgorithm($algo),
         ]);
     }
 
@@ -64,7 +64,9 @@ class AlgorithmManagerFactory
     private function build(string $algo): AlgorithmContract
     {
         if (!isset($this->pool[$algo])) {
-            $this->pool[$algo] = new $algo();
+            /** @var AlgorithmContract $algorithm */
+            $algorithm = new $algo();
+            $this->pool[$algo] = $algorithm;
         }
         return $this->pool[$algo];
     }

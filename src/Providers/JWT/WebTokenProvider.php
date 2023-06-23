@@ -18,6 +18,7 @@ class WebTokenProvider implements JWT
      * @param \Jose\Component\Core\AlgorithmManager                     $algorithmManager
      * @param \Jose\Component\Signature\Serializer\JWSSerializerManager $serializerManager
      * @param \Jose\Component\Signature\JWSVerifier                     $jwsVerifier
+     * @param \Jose\Component\Signature\JWSBuilder                      $jwsBuilder
      * @param \FusionAuth\JWTAuth\WebTokenProvider\Key\SignerInterface  $signer
      * @param string                                                    $algo
      */
@@ -25,13 +26,14 @@ class WebTokenProvider implements JWT
         protected readonly AlgorithmManager $algorithmManager,
         protected readonly JWSSerializerManager $serializerManager,
         protected readonly JWSVerifier $jwsVerifier,
+        protected readonly JWSBuilder $jwsBuilder,
         protected readonly SignerInterface $signer,
         protected readonly string $algo,
     ) {
     }
 
     /**
-     * @param array $payload
+     * @param array<string, mixed> $payload
      *
      * @return string
      * @throws \Tymon\JWTAuth\Exceptions\JWTException
@@ -52,7 +54,7 @@ class WebTokenProvider implements JWT
             throw new JWTException('Could not create token: ' . \json_last_error_msg());
         }
 
-        $jws = $this->getJwsBuilder()
+        $jws = $this->jwsBuilder
             ->create()
             ->withPayload($payload)
             ->addSignature($signingKey, ['alg' => $this->algo])
@@ -72,7 +74,7 @@ class WebTokenProvider implements JWT
     /**
      * @param string $token
      *
-     * @return array
+     * @return array<string, mixed>
      * @throws \Tymon\JWTAuth\Exceptions\JWTException
      * @throws \Tymon\JWTAuth\Exceptions\TokenInvalidException
      */
@@ -100,17 +102,13 @@ class WebTokenProvider implements JWT
         }
 
         try {
-            return json_decode($jws->getPayload(), true);
+            $payload = $jws->getPayload();
+            if (empty($payload)) {
+                return [];
+            }
+            return (array) json_decode($payload, true);
         } catch (\Throwable $t) {
             throw new TokenInvalidException('Could not decode token: ' . $t->getMessage(), $t->getCode(), $t);
         }
-    }
-
-    protected function getJwsBuilder(): JWSBuilder
-    {
-        if (!isset($this->jwsBuilder)) {
-            $this->jwsBuilder = new JWSBuilder($this->algorithmManager);
-        }
-        return $this->jwsBuilder;
     }
 }

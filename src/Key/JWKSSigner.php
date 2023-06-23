@@ -70,7 +70,7 @@ class JWKSSigner extends AsymmetricSigner implements SignerInterface
             if (!\is_readable($file)) {
                 return null;
             }
-            return \file_get_contents($file);
+            return \file_get_contents($file) ?: null;
         }
 
         // Downloading remote file and caching it

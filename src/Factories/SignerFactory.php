@@ -15,7 +15,12 @@ class SignerFactory
     /**
      * @param string|null $secret
      * @param string      $algo
-     * @param array|null  $keys
+     * @param array{
+     *     jwks?: array{url?: string, cache: array{ttl?: int}},
+     *     private: string,
+     *     passphrase?: string,
+     *     public: string
+     * }|null $keys
      *
      * @return \FusionAuth\JWTAuth\WebTokenProvider\Key\SignerInterface
      * @throws \Tymon\JWTAuth\Exceptions\JWTException

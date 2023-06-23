@@ -26,6 +26,8 @@
         "web-token/jwt-key-mgmt": "^3.2"
     },
     "require-dev": {
+        "nunomaduro/larastan": "^2.0",
+        "orchestra/testbench": "^8.5",
         "phpunit/phpunit": "^9.4"
     },
     "suggest": {
@@ -57,6 +59,7 @@
     "minimum-stability": "dev",
     "scripts": {
         "test": "phpunit --colors=always",
+        "analyze": "phpstan analyze",
         "test:ci": "composer test -- --verbose --coverage-text --coverage-clover=coverage.xml"
     }
 }
