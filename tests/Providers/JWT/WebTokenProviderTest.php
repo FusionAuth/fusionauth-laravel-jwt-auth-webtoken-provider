@@ -8,6 +8,8 @@ use FusionAuth\JWTAuth\WebTokenProvider\Exceptions\JWKSException;
 use FusionAuth\JWTAuth\WebTokenProvider\Factories\AlgorithmManagerFactory;
 use FusionAuth\JWTAuth\WebTokenProvider\Factories\SignerFactory;
 use FusionAuth\JWTAuth\WebTokenProvider\Providers\JWT\WebTokenProvider;
+use Jose\Component\Core\AlgorithmManager;
+use Jose\Component\Signature\JWSBuilder;
 use Jose\Component\Signature\JWSVerifier;
 use Jose\Component\Signature\Serializer\CompactSerializer;
 use Jose\Component\Signature\Serializer\JWSSerializerManager;
@@ -28,9 +30,23 @@ class WebTokenProviderTest extends TestCase
 
     protected readonly string $secret;
 
-    protected string $privateKey = 'file://' . __DIR__ . '/../../id_rsa';
+    /**
+     * @var JWSVerifier[]
+     */
+    protected array $jwsVerifiersByAlgo = [];
 
-    protected string $publicKey = 'file://' . __DIR__ . '/../../id_rsa.pub';
+    /**
+     * @var JWSBuilder[]
+     */
+    protected array $jwsBuildersByAlgo = [];
+
+    protected string $rsaPrivateKey = 'file://' . __DIR__ . '/../../rsa-private-key.pem';
+
+    protected string $rsaPublicKey = 'file://' . __DIR__ . '/../../rsa-public-key.pem';
+
+    protected string $eccPrivateKey = 'file://' . __DIR__ . '/../../ecc-private-key.pem';
+
+    protected string $eccPublicKey = 'file://' . __DIR__ . '/../../ecc-public-key.pem';
 
     protected string $jwksEmpty = 'file://' . __DIR__ . '/../../jwks-empty.json';
 
@@ -47,8 +63,8 @@ class WebTokenProviderTest extends TestCase
     {
         $payload = [
             'sub'          => 1,
-            'exp'          => $this->testNowTimestamp + 3600,
-            'iat'          => $this->testNowTimestamp,
+            'exp'          => $exp = $this->testNowTimestamp + 3600,
+            'iat'          => $iat = $this->testNowTimestamp,
             'iss'          => '/foo',
             'custom_claim' => 'foobar',
         ];
@@ -74,8 +90,8 @@ class WebTokenProviderTest extends TestCase
     {
         $payload = [
             'sub'          => 1,
-            'exp'          => $this->testNowTimestamp + 3600,
-            'iat'          => $this->testNowTimestamp,
+            'exp'          => $exp = $this->testNowTimestamp + 3600,
+            'iat'          => $iat = $this->testNowTimestamp,
             'iss'          => '/foo',
             'custom_claim' => 'foobar',
         ];
@@ -97,8 +113,8 @@ class WebTokenProviderTest extends TestCase
     {
         $payload = [
             'sub'          => 1,
-            'exp'          => $this->testNowTimestamp + 3600,
-            'iat'          => $this->testNowTimestamp,
+            'exp'          => $exp = $this->testNowTimestamp + 3600,
+            'iat'          => $iat = $this->testNowTimestamp,
             'iss'          => '/foo',
             'custom_claim' => 'foobar',
         ];
@@ -106,13 +122,44 @@ class WebTokenProviderTest extends TestCase
         $provider = $this->getProvider(
             null,
             Provider::ALGO_RS256,
-            ['private' => $this->privateKey, 'public' => $this->publicKey]
+            ['private' => $this->rsaPrivateKey, 'public' => $this->rsaPublicKey]
         );
 
         $token = $provider->encode($payload);
 
         $header = json_decode(base64_decode(head(explode('.', $token))), true);
         $this->assertEquals(Provider::ALGO_RS256, $header['alg']);
+
+        $claims = $provider->decode($token);
+
+        $this->assertEquals('1', $claims['sub']);
+        $this->assertEquals('/foo', $claims['iss']);
+        $this->assertEquals('foobar', $claims['custom_claim']);
+        $this->assertEquals($exp, $claims['exp']);
+        $this->assertEquals($iat, $claims['iat']);
+    }
+
+    /** @test */
+    public function itCanEncodeAndDecodeATokenUsingAnAsymmetricES256Key()
+    {
+        $payload = [
+            'sub'          => 1,
+            'exp'          => $exp = $this->testNowTimestamp + 3600,
+            'iat'          => $iat = $this->testNowTimestamp,
+            'iss'          => '/foo',
+            'custom_claim' => 'foobar',
+        ];
+
+        $provider = $this->getProvider(
+            null,
+            Provider::ALGO_ES256,
+            ['private' => $this->eccPrivateKey, 'public' => $this->eccPublicKey]
+        );
+
+        $token = $provider->encode($payload);
+
+        $header = json_decode(base64_decode(head(explode('.', $token))), true);
+        $this->assertEquals(Provider::ALGO_ES256, $header['alg']);
 
         $claims = $provider->decode($token);
 
@@ -131,8 +178,8 @@ class WebTokenProviderTest extends TestCase
 
         $payload = [
             'sub'          => 1,
-            'exp'          => $this->testNowTimestamp + 3600,
-            'iat'          => $this->testNowTimestamp,
+            'exp'          => $exp = $this->testNowTimestamp + 3600,
+            'iat'          => $iat = $this->testNowTimestamp,
             'iss'          => '/foo',
             'custom_claim' => 'foobar',
             'invalid_utf8' => "\xB1\x31", // cannot be encoded as JSON
@@ -204,7 +251,7 @@ class WebTokenProviderTest extends TestCase
     }
 
     /** @test */
-    public function itShouldThrowAnExceptionWhenNoAsymmetricPublicKeyIsProvided()
+    public function itShouldThrowAnExceptionWhenNoRsaPublicKeyIsProvided()
     {
         $this->expectException(JWTException::class);
         $this->expectExceptionMessage('Public key is not set.');
@@ -212,12 +259,25 @@ class WebTokenProviderTest extends TestCase
         $this->getProvider(
             null,
             Provider::ALGO_RS256,
-            ['private' => $this->privateKey, 'public' => null]
+            ['private' => $this->rsaPrivateKey, 'public' => null]
         )->decode('foo.bar.baz');
     }
 
     /** @test */
-    public function itShouldThrowAnExceptionWhenNoAsymmetricprivateKeyIsProvided()
+    public function itShouldThrowAnExceptionWhenNoEccPublicKeyIsProvided()
+    {
+        $this->expectException(JWTException::class);
+        $this->expectExceptionMessage('Public key is not set.');
+
+        $this->getProvider(
+            null,
+            Provider::ALGO_ES256,
+            ['private' => $this->eccPrivateKey, 'public' => null]
+        )->decode('foo.bar.baz');
+    }
+
+    /** @test */
+    public function itShouldThrowAnExceptionWhenNoRsaPrivateKeyIsProvided()
     {
         $this->expectException(JWTException::class);
         $this->expectExceptionMessage('Private key is not set.');
@@ -225,12 +285,25 @@ class WebTokenProviderTest extends TestCase
         $this->getProvider(
             null,
             Provider::ALGO_RS256,
-            ['private' => null, 'public' => $this->publicKey]
+            ['private' => null, 'public' => $this->rsaPublicKey]
         )->encode(['sub' => 1]);
     }
 
     /** @test */
-    public function itShouldThrowAnExceptionWhenNoConfigWasProvided()
+    public function itShouldThrowAnExceptionWhenNoEccPrivateKeyIsProvided()
+    {
+        $this->expectException(JWTException::class);
+        $this->expectExceptionMessage('Private key is not set.');
+
+        $this->getProvider(
+            null,
+            Provider::ALGO_ES256,
+            ['private' => null, 'public' => $this->eccPublicKey]
+        )->encode(['sub' => 1]);
+    }
+
+    /** @test */
+    public function itShouldThrowAnExceptionWhenNoRsaConfigWasProvided()
     {
         $this->expectException(JWTException::class);
         $this->expectExceptionMessage('You must provide at least a private or public key.');
@@ -242,7 +315,19 @@ class WebTokenProviderTest extends TestCase
     }
 
     /** @test */
-    public function itShouldThrowAnExceptionWhenJwksFileDoesNotExist()
+    public function itShouldThrowAnExceptionWhenNoEccConfigWasProvided()
+    {
+        $this->expectException(JWTException::class);
+        $this->expectExceptionMessage('You must provide at least a private or public key.');
+        $this->getProvider(
+            null,
+            Provider::ALGO_ES256,
+            ['private' => null, 'public' => null]
+        )->encode(['sub' => 1]);
+    }
+
+    /** @test */
+    public function itShouldThrowAnExceptionWhenJwksFileDoesNotExistWithRsa()
     {
         $this->expectException(JWKSException::class);
         $this->expectExceptionMessage('Cannot retrieve JWKS from');
@@ -254,7 +339,19 @@ class WebTokenProviderTest extends TestCase
     }
 
     /** @test */
-    public function itShouldThrowAnExceptionWhenJwksIsEmpty()
+    public function itShouldThrowAnExceptionWhenJwksFileDoesNotExistWithECC()
+    {
+        $this->expectException(JWKSException::class);
+        $this->expectExceptionMessage('Cannot retrieve JWKS from');
+        $this->getProvider(
+            null,
+            Provider::ALGO_ES256,
+            ['private' => null, 'jwks' => ['url' => 'file://invalid-file']]
+        );
+    }
+
+    /** @test */
+    public function itShouldThrowAnExceptionWhenJwksIsEmptyWithRsa()
     {
         $this->expectException(JWKSException::class);
         $this->expectExceptionMessage('Cannot retrieve JWKS from');
@@ -266,13 +363,24 @@ class WebTokenProviderTest extends TestCase
     }
 
     /** @test */
-    public function itCanDecodeATokenUsingJwks()
+    public function itShouldThrowAnExceptionWhenJwksIsEmptyWithEcc()
     {
-        // @TODO DataProvider
+        $this->expectException(JWKSException::class);
+        $this->expectExceptionMessage('Cannot retrieve JWKS from');
+        $this->getProvider(
+            null,
+            Provider::ALGO_ES256,
+            ['private' => null, 'jwks' => ['url' => $this->jwksEmpty]]
+        );
+    }
+
+    /** @test */
+    public function itCanDecodeATokenUsingJwksWithRsa()
+    {
         $payload = [
             'sub'          => 1,
-            'exp'          => $this->testNowTimestamp + 3600,
-            'iat'          => $this->testNowTimestamp,
+            'exp'          => $exp = $this->testNowTimestamp + 3600,
+            'iat'          => $iat = $this->testNowTimestamp,
             'iss'          => '/foo',
             'custom_claim' => 'foobar',
         ];
@@ -280,7 +388,34 @@ class WebTokenProviderTest extends TestCase
         $provider = $this->getProvider(
             null,
             Provider::ALGO_RS256,
-            ['private' => $this->privateKey, 'jwks' => ['url' => $this->jwks]]
+            ['private' => $this->rsaPrivateKey, 'jwks' => ['url' => $this->jwks]]
+        );
+
+        $token = $provider->encode($payload);
+        $claims = $provider->decode($token);
+
+        $this->assertEquals('1', $claims['sub']);
+        $this->assertEquals('/foo', $claims['iss']);
+        $this->assertEquals('foobar', $claims['custom_claim']);
+        $this->assertEquals($exp, $claims['exp']);
+        $this->assertEquals($iat, $claims['iat']);
+    }
+
+    /** @test */
+    public function itCanDecodeATokenUsingJwksWithEcc()
+    {
+        $payload = [
+            'sub'          => 1,
+            'exp'          => $exp = $this->testNowTimestamp + 3600,
+            'iat'          => $iat = $this->testNowTimestamp,
+            'iss'          => '/foo',
+            'custom_claim' => 'foobar',
+        ];
+
+        $provider = $this->getProvider(
+            null,
+            Provider::ALGO_ES256,
+            ['private' => $this->eccPrivateKey, 'jwks' => ['url' => $this->jwks]]
         );
 
         $token = $provider->encode($payload);
@@ -296,13 +431,13 @@ class WebTokenProviderTest extends TestCase
     protected function getProvider(?string $secret, string $algo, array $keys = []): WebTokenProvider
     {
         $algorithmManager = $this->getAlgorithmManagerFactory()->make($algo);
-        $jwsVerifier = new JWSVerifier($algorithmManager);
         $signer = $this->getSignerFactory()->make($secret, $algo, $keys);
 
         return new WebTokenProvider(
             $algorithmManager,
             $this->getSerializerManager(),
-            $jwsVerifier,
+            $this->getVerifierForAlgo($algo, $algorithmManager),
+            $this->getBuilderForAlgo($algo, $algorithmManager),
             $signer,
             $algo,
         );
@@ -332,6 +467,22 @@ class WebTokenProviderTest extends TestCase
             ]);
         }
         return $this->serializerManager;
+    }
+
+    protected function getVerifierForAlgo(string $algo, AlgorithmManager $algorithmManager): JWSVerifier
+    {
+        if (!isset($this->jwsVerifiersByAlgo[$algo])) {
+            $this->jwsVerifiersByAlgo[$algo] = new JWSVerifier($algorithmManager);
+        }
+        return $this->jwsVerifiersByAlgo[$algo];
+    }
+
+    protected function getBuilderForAlgo(string $algo, AlgorithmManager $algorithmManager): JWSBuilder
+    {
+        if (!isset($this->jwsBuildersByAlgo[$algo])) {
+            $this->jwsBuildersByAlgo[$algo] = new JWSBuilder($algorithmManager);
+        }
+        return $this->jwsBuildersByAlgo[$algo];
     }
 
     protected function generateSecret(): string
