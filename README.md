@@ -1,5 +1,7 @@
 # PHP JWT Framework for Laravel
 
+[![Integration](https://github.com/vcampitelli/fusionauth-laravel-jwt-auth-webtoken-provider/actions/workflows/integration.yml/badge.svg)](https://github.com/vcampitelli/fusionauth-laravel-jwt-auth-webtoken-provider/actions/workflows/integration.yml)
+
 This library adds [web-token/jwt-framework](https://github.com/web-token/jwt-framework) as an alternative to [lcobucci/jwt](https://github.com/lcobucci/jwt) in [tymon/jwt-auth](https://github.com/tymondesigns/jwt-auth) for Laravel in order to provide [JWKS support](https://datatracker.ietf.org/doc/html/rfc7517).
 
 ## Installation
