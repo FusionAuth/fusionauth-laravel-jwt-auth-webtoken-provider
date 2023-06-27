@@ -13,7 +13,7 @@ use Jose\Component\Signature\Serializer\JWSSerializerManager;
 use FusionAuth\JWTAuth\WebTokenProvider\Factories;
 use FusionAuth\JWTAuth\WebTokenProvider\Providers\JWT\WebTokenProvider;
 
-use function config;
+use function config, config_path;
 
 class WebTokenServiceProvider extends ServiceProvider
 {
@@ -23,6 +23,13 @@ class WebTokenServiceProvider extends ServiceProvider
         $this->registerSerializerManager();
         $this->registerSignerInterface();
         $this->registerProvider();
+    }
+
+    public function boot(): void
+    {
+        $this->publishes([
+            __DIR__ . '/../../config/jwt.php' => config_path('jwt.php'),
+        ]);
     }
 
     /**
