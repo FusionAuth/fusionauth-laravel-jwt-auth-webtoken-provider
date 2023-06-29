@@ -2,7 +2,9 @@
 
 [![Integration](https://github.com/vcampitelli/fusionauth-laravel-jwt-auth-webtoken-provider/actions/workflows/integration.yml/badge.svg)](https://github.com/vcampitelli/fusionauth-laravel-jwt-auth-webtoken-provider/actions/workflows/integration.yml)
 
-This library adds [web-token/jwt-framework](https://github.com/web-token/jwt-framework) as an alternative to [lcobucci/jwt](https://github.com/lcobucci/jwt) in [tymon/jwt-auth](https://github.com/tymondesigns/jwt-auth) for Laravel in order to provide [JWKS support](https://datatracker.ietf.org/doc/html/rfc7517).
+This library adds support to [`web-token/jwt-framework`](https://github.com/web-token/jwt-framework) as an alternative to [`lcobucci/jwt`](https://github.com/lcobucci/jwt) in [`tymon/jwt-auth`](https://github.com/tymondesigns/jwt-auth), which is probably the most used Laravel package for JWT authentication.
+
+The main goal here is to provide [JWKS support](https://datatracker.ietf.org/doc/html/rfc7517) instead of using public keys stored locally.
 
 ## Installation
 
@@ -29,32 +31,15 @@ Then, you should add one of [PHP JWT Framework's Signature libraries](https://we
 
 ## Usage
 
-After [publishing the config file](https://jwt-auth.readthedocs.io/en/develop/laravel-installation/#publish-the-config) from `tymon/jwt-auth`, change the `providers.jwt` to [`WebTokenProvider`](./src/Providers/WebTokenServiceProvider.php):
+Publish this package config file (which overrides [the one from `tymon/jwt-auth`](https://jwt-auth.readthedocs.io/en/develop/laravel-installation/#publish-the-config)):
 
-```php
-'jwt' => FusionAuth\JWTAuth\WebTokenProvider\Providers\JWT\WebTokenProvider::class,
+```shell
+php artisan vendor:publish --provider="FusionAuth\JWTAuth\WebTokenProvider\Providers\WebTokenServiceProvider"
 ```
 
 ### Using JWKS
 
-Instead of providing a local public key and using [JWKS](https://datatracker.ietf.org/doc/html/rfc7517), change your [`config/jwt.php` file](https://jwt-auth.readthedocs.io/en/develop/configuration/) again to add a new `jwks` section inside your `keys`:
-
-```php
-    'keys' => [
-        /**
-          * Leave `private` and `passphrase` as they are and add this:
-          */
-        
-        'jwks' => [
-            'url' => env('JWT_JWKS_URL'),
-            'cache' => [
-                'ttl' => env('JWT_JWKS_URL_CACHE'),
-            ],
-        ],
-    ],
-```
-
-Now edit your `.env` file to add the JWKS config:
+Instead of providing a local public key and use [JWKS](https://datatracker.ietf.org/doc/html/rfc7517), edit your `.env` file to add these lines:
 
 ```dotenv
 JWT_JWKS_URL=https://your.application.address.to/jwks.json
