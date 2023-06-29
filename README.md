@@ -56,7 +56,7 @@ Otherwise, please [post your question in the community forum](https://fusionauth
 
 ## Contributing
 
-Bug reports and pull requests are welcome on GitHub at https://github.com/FusionAuth/fusionauth-php-client.
+Bug reports and pull requests are welcome on GitHub at https://github.com/FusionAuth/fusionauth-laravel-jwt-auth-webtoken-provider.
 
 ## License
 
