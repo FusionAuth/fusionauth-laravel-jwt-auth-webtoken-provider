@@ -59,7 +59,7 @@ target(name: "analyze", description: "Runs static analysis", dependsOn: "clean")
 target(name: "publish", description: "Update packagist to sync with our GitHub tags", dependsOn: ["clean", "int"]) {
   runCommand(
       "curl", "-XPOST", "-H", "Content-Type:application/json",
-      "-d", "{\"repository\":{\"url\":\"https://packagist.org/packages/fusionauth/fusionauth-jwt-auth-webtoken-provider\"}}",
+      "-d", "{\"repository\":{\"url\":\"https://packagist.org/packages/fusionauth/jwt-auth-webtoken-provider\"}}",
       "https://packagist.org/api/update-package?username=${global.packagistUsername}&apiToken=${global.packagistAPIToken}"
   )
 }
