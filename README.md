@@ -48,6 +48,17 @@ JWT_JWKS_URL=https://your.application.address.to/jwks.json
 JWT_JWKS_URL_CACHE=86400
 ```
 
+## Packagist
+
+You can find this on https://packagist.org/packages/fusionauth/jwt-auth-webtoken-provider
+
+This packagist listing is updated using a GitHub webhook.
+
+## Release
+
+* `sb release`
+* `sb publish`
+
 ## Questions and support
 
 If you have a question or support issue regarding this client library, we'd love to hear from you.
