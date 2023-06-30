@@ -31,6 +31,8 @@ Then, you should add one of [PHP JWT Framework's Signature libraries](https://we
 
 ## Usage
 
+This requires composer 2.2 or greater.
+
 Publish this package config file (which overrides [the one from `tymon/jwt-auth`](https://jwt-auth.readthedocs.io/en/develop/laravel-installation/#publish-the-config)):
 
 ```shell
