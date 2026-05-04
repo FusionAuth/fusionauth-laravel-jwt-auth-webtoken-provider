@@ -22,23 +22,14 @@
     "require": {
         "php": "^8.1",
         "tymon/jwt-auth": "^2.0",
-        "web-token/jwt-core": "^3.2",
-        "web-token/jwt-key-mgmt": "^3.2",
-        "web-token/jwt-signature": "^3.2"
+        "web-token/jwt-library": "^4.1"
     },
     "require-dev": {
         "nunomaduro/larastan": "^2.0",
         "orchestra/testbench": "^8.5",
-        "phpunit/phpunit": "^9.4",
-        "web-token/jwt-signature-algorithm-ecdsa": "^3.2",
-        "web-token/jwt-signature-algorithm-hmac": "^3.2",
-        "web-token/jwt-signature-algorithm-rsa": "^3.2"
+        "phpunit/phpunit": "^9.4"
     },
-    "suggest": {
-        "web-token/jwt-signature-algorithm-ecdsa": "To issue and decode ECDSA-Based JWTs",
-        "web-token/jwt-signature-algorithm-hmac": "To issue and decode HMAC-Based JWTs",
-        "web-token/jwt-signature-algorithm-rsa": "To issue and decode RSA-Based JWTs"
-    },
+    "suggest": {},
     "autoload": {
         "psr-4": {
             "FusionAuth\\JWTAuth\\WebTokenProvider\\": "src/"
